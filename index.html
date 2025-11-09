@@ -317,7 +317,12 @@ exportCSV.onclick = ()=>{
 
 
 const toggleBtn = document.getElementById('toggleExercises');
-let hidden = false;
+let hidden = true;
+
+document.getElementById('exerciseBadges').style.display = 'none';
+document.getElementById('exercisePickerRow').style.display = 'none';
+toggleBtn.textContent = 'Näytä';
+
 toggleBtn.onclick = () => {
   hidden = !hidden;
   document.getElementById('exerciseBadges').style.display = hidden ? 'none' : 'flex';
