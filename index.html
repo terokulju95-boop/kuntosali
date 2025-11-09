@@ -325,7 +325,9 @@ toggleBtn.onclick = () => {
   toggleBtn.textContent = hidden ? 'Näytä' : 'Piilota';
 };
 
-let historyHidden=false;
+let historyHidden = true;
+document.getElementById('historyContainer').style.display = 'none';
+document.getElementById('toggleHistory').textContent = 'Näytä historia';
 document.getElementById('toggleHistory').onclick = () => {
   historyHidden = !historyHidden;
   document.getElementById('historyContainer').style.display = historyHidden ? 'none' : 'block';
