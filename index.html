@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang='fi'>
+<head>
+<meta charset='utf-8'>
+<title>Kuntosali v9</title>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<style>
+  :root{--bg:#000;--card:#0f0f0f;--ink:#ff7a00;--line:#222;--muted:#d8d8d8;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,system-ui,-apple-system,Segoe UI,Roboto;}
+  header{position:fixed;top:0;left:0;right:0;text-align:center;
+  background:#0b0b0b;padding:14px 0;font-size:20px;border-bottom:1px solid var(--line);z-index:10;}
+  .wrap{padding:80px 16px;max-width:860px;margin:0 auto;}
+  .card{background:var(--card);padding:16px;border-radius:16px;border:1px solid var(--line);margin-bottom:16px;}
+  .field{display:flex;flex-direction:column;margin-bottom:12px;}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  input,select{padding:8px 10px;border-radius:10px;border:1px solid #333;background:#000;color:var(--ink);font-size:15px;}
+  .small{max-width:80px;}
+  label{font-size:12px;margin-bottom:4px;color:var(--muted);}
+  .title{color:var(--ink);font-size:20px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+  h3{margin:0 0 8px 0;color:var(--ink)}
+  button{padding:8px 12px;background:var(--ink);color:#000;border:none;border-radius:10px;font-weight:bold;cursor:pointer}
+  .btn-ghost{background:#0a0a0a;color:var(--ink);border:1px solid #333}
+  .badge{display:inline-flex;align-items:center;gap:6px;background:#1a1a1a;border:1px solid #333;border-radius:999px;padding:6px 10px;margin:4px 6px 0 0}
+  .badge button{padding:2px 8px;border-radius:8px;background:#2a2a2a;color:var(--ink);border:1px solid #444}
+  hr{border:none;border-top:1px solid var(--line);margin:10px 0}
+  table{width:100%;border-collapse:collapse;color:var(--ink);font-size:14px;}
+  th,td{padding:10px;border-bottom:1px solid #333;text-align:left}
+  th{background:#0b0b0b;position:sticky;top:0}
+  .summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+  @media (min-width:820px){.summary{grid-template-columns:1fr 1fr 1fr}}
+  .summary .box{background:#0b0b0b;border:1px solid #222;border-radius:12px;padding:10px}
+  .smalltext{font-size:12px;color:var(--muted)}
+  .green{color:#29d67d} .red{color:#ff5c5c}
+</style>
+
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#000000">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+<header>Kuntosali</header>
+
+<div class='wrap'>
+
+  <!-- Ohjelma -->
+  <div class='card'>
+    <div class='title'>Ohjelma</div>
+    <div class='row'>
+      <select id='program' style='min-width:240px'></select>
+      <button id='addProgram'>+ lisää ohjelma</button>
+      <button id='resetAll' class='btn-ghost' title='Poistaa kaiken datan'>Nollaa kaikki</button>
+    </div>
+  </div>
+
+  <!-- Liikelista -->
+  <div class='card'>
+    <div class='title'>
+      <span>Ohjelman liikkeet</span>
+      <button id='toggleExercises' class='btn-ghost'>Piilota</button>
+    </div>
+
+    <div id='exerciseBadges' class='row'></div>
+    <hr/>
+    <div class='row' id="exercisePickerRow">
+      <select id='presetExercises' style='min-width:220px'>
+        <option value=''>Valitse liike…</option>
+        <optgroup label="Aerobinen">
+          <option>Kävelymatto</option>
+        </optgroup>
+        <optgroup label="Keskivartalo">
+          <option>Vatsalihakset</option>
+          <option>Selkälihakset</option>
+        </optgroup>
+        <optgroup label="Jalat">
+          <option>Etureidet</option>
+          <option>Takareidet</option>
+          <option>Pohkeet</option>
+          <option>Jalkaprässi</option>
+        </optgroup>
+        <optgroup label="Lantio">
+          <option>Lonkan ulkokierto</option>
+          <option>Lonkan sisäkierto</option>
+        </optgroup>
+        <optgroup label="Yläkroppa">
+          <option>Rintalihakset</option>
+          <option>Soutu</option>
+          <option>Leuanveto/ylätalja</option>
+          <option>Pystypunnerrus</option>
+          <option>Hauiskääntö</option>
+          <option>Ojentajat</option>
+        </optgroup>
+        <option value='oma'>+ Oma liike…</option>
+      </select>
+      <button id='addExercise'>+ lisää liike</button>
+    </div>
+    
+  </div>
+
+  <!-- Päivän treeni -->
+  <div class='card'>
+    <div class='title'>Tämän päivän treeni</div>
+    <div id='todayEntries'></div>
+    <div class='row'>
+      <button id='saveDay'>Tallenna</button>
+    </div>
+  </div>
+
+  <!-- Vertailu -->
+  <div class='card'>
+    <div class='title'>
+      <span>Vertailu</span>
+      <button id="toggleHistory" class="btn-ghost">Piilota historia</button>
+    </div>
+    <div id="summaryBoxes" class="summary"></div>
+
+    <div id="historyContainer">
+      <table>
+        <thead>
+          <tr><th>Päivä</th><th>Liike</th><th>Kg</th><th>Toistot</th><th>Sarjat</th><th>Km</th></tr>
+        </thead>
+        <tbody id='historyBody'></tbody>
+      </table>
+    </div>
+
+    <button id='exportCSV'>Vie CSV</button>
+  </div>
+
+</div>
+
+<script>
+// --- Data ---
+let data = JSON.parse(localStorage.getItem('gymData_v6')||'{}');
+if(!data.programs){
+  data = {
+    programs:[
+      {id:id(), name:'Ohjelma A', exercises:['Kävelymatto','Etureidet','Vatsalihakset','Rintalihakset']},
+      {id:id(), name:'Ohjelma B', exercises:['Kävelymatto','Takareidet','Selkälihakset','Soutu']}
+    ],
+    logs:[],
+    baseline:{} // { [exerciseName]: { date:'YYYY-MM-DD', kg: number?, km: number? } }
+  };
+} else if(!data.baseline){ data.baseline = {}; }
+
+function saveData(){ localStorage.setItem('gymData_v6', JSON.stringify(data)); }
+function id(){ return Math.random().toString(36).slice(2,9); }
+
+// --- Renderers ---
+function renderPrograms(){
+  const s=document.getElementById('program');
+  s.innerHTML='';
+  data.programs.forEach(pr=>{
+    const o=document.createElement('option'); o.value=pr.id; o.textContent=pr.name; s.appendChild(o);
+  });
+  if(!s.value && data.programs[0]) s.value=data.programs[0].id;
+}
+function renderExerciseBadges(){
+  const pr=currentProgram(); const box=document.getElementById('exerciseBadges'); box.innerHTML='';
+  pr.exercises.forEach((name, idx)=>{
+    const b=document.createElement('div'); b.className='badge';
+    b.innerHTML = `<span>${name}</span> <button title="Poista">×</button>`;
+    b.querySelector('button').onclick = ()=>{
+      if(confirm('Poistetaanko liike ohjelmasta?')){
+        pr.exercises.splice(idx,1); saveData(); renderExerciseBadges(); renderToday();
+      }
+    };
+    box.appendChild(b);
+  });
+}
+function renderToday(){
+  const pr=currentProgram(); const box=document.getElementById('todayEntries'); box.innerHTML='';
+  pr.exercises.forEach(ex=>{
+    const card=document.createElement('div'); card.className='card';
+    if(ex.toLowerCase().includes('matto')){
+      card.innerHTML = `<h3>${ex}</h3>
+        <div class='row'>
+          <div class='field'><label>Kilometrit (km)</label>
+          <input class='small' data-ex='${ex}' data-field='km' type='number' inputmode='decimal' step='0.01'></div>
+        </div>`;
+    } else {
+      card.innerHTML = `<h3>${ex}</h3>
+        <div class='row'>
+          <div class='field'><label>Kg</label><input class='small' data-ex='${ex}' data-field='kg' type='number' inputmode='decimal' step='0.1'></div>
+          <div class='field'><label>Toistot</label><input class='small' data-ex='${ex}' data-field='reps' type='number' inputmode='numeric'></div>
+          <div class='field'><label>Sarjat</label><input class='small' data-ex='${ex}' data-field='sets' type='number' inputmode='numeric'></div>
+        </div>`;
+    }
+    box.appendChild(card);
+  });
+}
+function renderHistory(){
+  const tb=document.getElementById('historyBody'); tb.innerHTML='';
+  data.logs.forEach(l=>{
+    l.entries.forEach(e=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${l.date}</td><td>${e.name}</td><td>${clean(e.kg)}</td><td>${clean(e.reps)}</td><td>${clean(e.sets)}</td><td>${clean(e.km)}</td>`;
+      tb.appendChild(tr);
+    });
+  });
+  renderSummary();
+}
+function renderSummary(){
+  // Yhdessä kortissa: Lähtö (kg/km), Uusin (kg/km), Muutos: +X kg (+Y%) TAI +X km (+Y%)
+  const pr=currentProgram(); const box=document.getElementById('summaryBoxes'); box.innerHTML='';
+  pr.exercises.forEach(name=>{
+    const isMatto = name.toLowerCase().includes('matto');
+    const metric = isMatto ? 'km' : 'kg';
+    const baseObj = data.baseline[name] || {};
+    let firstVal = toNum(baseObj[metric]);
+
+    // fallback jos baseline puuttuu: etsi vanhin ei-tyhjä arvo
+    if(firstVal==null){
+      const first = findEntry(name, 'first', metric);
+      firstVal = first ? toNum(first[metric]) : null;
+    }
+
+    const last = findEntry(name, 'last', metric);
+    const lastVal  = last  ? toNum(last[metric])  : null;
+
+    let abs = null, pct = null;
+    if(firstVal!=null && lastVal!=null){
+      abs = lastVal - firstVal;
+      pct = (firstVal!==0) ? ((lastVal - firstVal) / Math.abs(firstVal)) * 100 : null;
+    }
+    const absTxt = (abs==null) ? '-' : fmt(abs) + ' ' + metric;
+    const pctTxt = (pct==null) ? '-' : (pct>=0? '<span class="green">+'+fmt(pct)+'%</span>' : '<span class="red">'+fmt(pct)+'%</span>');
+
+    const el=document.createElement('div'); el.className='box';
+    el.innerHTML = `<div class='smalltext'>${name}</div>
+      <div><strong>Lähtö (${metric})</strong>: ${firstVal!=null?fmt(firstVal):'-'}<br>
+           <strong>Uusin (${metric})</strong>: ${lastVal!=null?fmt(lastVal):'-'}<br>
+           <strong>Muutos</strong>: ${absTxt} (${pctTxt})</div>`;
+    box.appendChild(el);
+  });
+}
+
+// --- Helpers ---
+function currentProgram(){ return data.programs.find(x=>x.id===program.value) || data.programs[0]; }
+function toNum(v){ const n=parseFloat(v); return Number.isFinite(n)? n : null; }
+function fmt(n){ return (Math.round(n*10)/10).toString().replace('.', ','); }
+function clean(v){ return (v===undefined || v===null || v==='')? '' : v; }
+function findEntry(name, which, metric){
+  // Palauta vanhin/uusin kirjaus josta löytyy haluttu metriikka
+  const all = [];
+  data.logs.forEach(l=>{
+    l.entries.forEach(e=>{ 
+      if(e.name===name && e[metric]!==undefined && e[metric]!=='' ) all.push({date:l.date, ...e}); 
+    });
+  });
+  all.sort((a,b)=> a.date.localeCompare(b.date));
+  if(all.length===0) return null;
+  return (which==='first')? all[0] : all[all.length-1];
+}
+
+// --- Events ---
+addProgram.onclick = ()=>{
+  const n=prompt('Ohjelman nimi'); if(!n) return;
+  data.programs.push({id:id(), name:n, exercises:[]});
+  saveData(); renderPrograms(); renderExerciseBadges(); renderToday(); renderHistory();
+};
+addExercise.onclick = ()=>{
+  const pr=currentProgram();
+  const sel=document.getElementById('presetExercises').value;
+  if(!sel) return;
+  if(sel==='oma'){ const n=prompt('Oma liike'); if(!n) return; pr.exercises.push(n); }
+  else { pr.exercises.push(sel); }
+  saveData(); renderExerciseBadges(); renderToday();
+};
+resetAll.onclick = ()=>{
+  if(confirm('Nollataanko KAIKKI tiedot? (ohjelmat ja historiat)')){
+    localStorage.removeItem('gymData_v6');
+    data={programs:[],logs:[],baseline:{}};
+    data.programs=[
+      {id:id(), name:'Ohjelma A', exercises:['Kävelymatto','Etureidet','Vatsalihakset','Rintalihakset']},
+      {id:id(), name:'Ohjelma B', exercises:['Kävelymatto','Takareidet','Selkälihakset','Soutu']}
+    ];
+    saveData(); renderPrograms(); renderExerciseBadges(); renderToday(); renderHistory();
+    alert('Nollattu.');
+  }
+};
+program.onchange = ()=>{ renderExerciseBadges(); renderToday(); renderHistory(); };
+
+saveDay.onclick = ()=>{
+  const date=new Date().toISOString().slice(0,10);
+  const entries=[];
+  document.querySelectorAll('[data-ex]').forEach(inp=>{
+    const ex=inp.dataset.ex; const f=inp.dataset.field; const raw=inp.value;
+    if(!entries.find(e=>e.name===ex)) entries.push({name:ex});
+    const eobj=entries.find(e=>e.name===ex); eobj[f]=raw;
+
+    // --- Lähtö tallennus: ensimmäinen ei-tyhjä arvo lukitaan baselineen ---
+    const isMatto = ex.toLowerCase().includes('matto');
+    const metric = isMatto ? 'km' : 'kg';
+    const num = toNum(raw);
+    if(num!=null && (data.baseline[ex]==null || data.baseline[ex][metric]==null)){
+      if(!data.baseline[ex]) data.baseline[ex]={};
+      data.baseline[ex].date = date;
+      data.baseline[ex][metric] = num; // lukitaan lähtöarvo
+    }
+  });
+  if(entries.length===0){ alert('Ei kirjattavaa. Lisää liikkeitä ohjelmaan.'); return; }
+  data.logs.push({date, program: currentProgram().name, entries});
+  saveData(); renderHistory();
+  alert('Tallennettu.');
+};
+
+exportCSV.onclick = ()=>{
+  const lines=['paiva;ohjelma;liike;kg;toistot;sarjat;km'];
+  data.logs.forEach(l=>{
+    l.entries.forEach(e=>{
+      lines.push([l.date,l.program,e.name,clean(e.kg),clean(e.reps),clean(e.sets),clean(e.km)].join(';'));
+    });
+  });
+  const blob=new Blob(["\uFEFF"+lines.join('\n')],{type:'text/csv'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='kuntosali.csv'; a.click();
+};
+
+
+const toggleBtn = document.getElementById('toggleExercises');
+let hidden = false;
+toggleBtn.onclick = () => {
+  hidden = !hidden;
+  document.getElementById('exerciseBadges').style.display = hidden ? 'none' : 'flex';
+  document.getElementById('exercisePickerRow').style.display = hidden ? 'none' : 'flex';
+  toggleBtn.textContent = hidden ? 'Näytä' : 'Piilota';
+};
+
+let historyHidden=false;
+document.getElementById('toggleHistory').onclick = () => {
+  historyHidden = !historyHidden;
+  document.getElementById('historyContainer').style.display = historyHidden ? 'none' : 'block';
+  document.getElementById('toggleHistory').textContent = historyHidden ? 'Näytä historia' : 'Piilota historia';
+};
+
+// First paint
+renderPrograms(); renderExerciseBadges(); renderToday(); renderHistory();
+</script>
+
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js');
+  });
+}
+</script>
+</body>
+</html>
