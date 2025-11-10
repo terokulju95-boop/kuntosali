@@ -2,7 +2,7 @@
 <html lang='fi'>
 <head>
 <meta charset='utf-8'>
-<title>Kuntosali v9</title>
+<title>Kuntosali v10</title>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <style>
   :root{--bg:#000;--card:#0f0f0f;--ink:#ff7a00;--line:#222;--muted:#d8d8d8;}
@@ -38,6 +38,7 @@
 <meta name="theme-color" content="#000000">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 </head>
+
 <body>
 <header>Kuntosali</header>
 
@@ -49,7 +50,7 @@
     <div class='row'>
       <select id='program' style='min-width:240px'></select>
       <button id='addProgram'>+ lisää ohjelma</button>
-      <button id='resetAll' class='btn-ghost' title='Poistaa kaiken datan'>Nollaa kaikki</button>
+      <button id='resetAll' class='btn-ghost'>Nollaa kaikki</button>
     </div>
   </div>
 
@@ -62,6 +63,7 @@
 
     <div id='exerciseBadges' class='row'></div>
     <hr/>
+
     <div class='row' id="exercisePickerRow">
       <select id='presetExercises' style='min-width:220px'>
         <option value=''>Valitse liike…</option>
@@ -106,12 +108,13 @@
     </div>
   </div>
 
-  <!-- Vertailu -->
+  <!-- Historia ja CSV -->
   <div class='card'>
     <div class='title'>
       <span>Vertailu</span>
       <button id="toggleHistory" class="btn-ghost">Piilota historia</button>
     </div>
+
     <div id="summaryBoxes" class="summary"></div>
 
     <div id="historyContainer">
@@ -124,6 +127,10 @@
     </div>
 
     <button id='exportCSV'>Vie CSV</button>
+    <button id='exportJSON'>Vie JSON</button>
+    <button id='importJSON'>Tuo JSON</button>
+    <input type="file" id="jsonFileInput" accept="application/json" style="display:none">
+
   </div>
 
 </div>
@@ -138,7 +145,7 @@ if(!data.programs){
       {id:id(), name:'Ohjelma B', exercises:['Kävelymatto','Takareidet','Selkälihakset','Soutu']}
     ],
     logs:[],
-    baseline:{} // { [exerciseName]: { date:'YYYY-MM-DD', kg: number?, km: number? } }
+    baseline:{}
   };
 } else if(!data.baseline){ data.baseline = {}; }
 
@@ -175,14 +182,14 @@ function renderToday(){
       card.innerHTML = `<h3>${ex}</h3>
         <div class='row'>
           <div class='field'><label>Kilometrit (km)</label>
-          <input class='small' data-ex='${ex}' data-field='km' type='number' inputmode='decimal' step='0.01'></div>
+          <input class='small' data-ex='${ex}' data-field='km' type='number' step='0.01'></div>
         </div>`;
     } else {
       card.innerHTML = `<h3>${ex}</h3>
         <div class='row'>
-          <div class='field'><label>Kg</label><input class='small' data-ex='${ex}' data-field='kg' type='number' inputmode='decimal' step='0.1'></div>
-          <div class='field'><label>Toistot</label><input class='small' data-ex='${ex}' data-field='reps' type='number' inputmode='numeric'></div>
-          <div class='field'><label>Sarjat</label><input class='small' data-ex='${ex}' data-field='sets' type='number' inputmode='numeric'></div>
+          <div class='field'><label>Kg</label><input class='small' data-ex='${ex}' data-field='kg' type='number' step='0.1'></div>
+          <div class='field'><label>Toistot</label><input class='small' data-ex='${ex}' data-field='reps' type='number'></div>
+          <div class='field'><label>Sarjat</label><input class='small' data-ex='${ex}' data-field='sets' type='number'></div>
         </div>`;
     }
     box.appendChild(card);
@@ -200,36 +207,36 @@ function renderHistory(){
   renderSummary();
 }
 function renderSummary(){
-  // Yhdessä kortissa: Lähtö (kg/km), Uusin (kg/km), Muutos: +X kg (+Y%) TAI +X km (+Y%)
   const pr=currentProgram(); const box=document.getElementById('summaryBoxes'); box.innerHTML='';
   pr.exercises.forEach(name=>{
     const isMatto = name.toLowerCase().includes('matto');
     const metric = isMatto ? 'km' : 'kg';
-    const baseObj = data.baseline[name] || {};
-    let firstVal = toNum(baseObj[metric]);
+    const base = data.baseline[name] || {};
+    let firstVal = toNum(base[metric]);
 
-    // fallback jos baseline puuttuu: etsi vanhin ei-tyhjä arvo
     if(firstVal==null){
-      const first = findEntry(name, 'first', metric);
-      firstVal = first ? toNum(first[metric]) : null;
+      const first = findEntry(name,'first',metric);
+      firstVal = first? toNum(first[metric]) : null;
     }
 
-    const last = findEntry(name, 'last', metric);
-    const lastVal  = last  ? toNum(last[metric])  : null;
+    const last = findEntry(name,'last',metric);
+    const lastVal = last? toNum(last[metric]) : null;
 
-    let abs = null, pct = null;
+    let abs=null, pct=null;
     if(firstVal!=null && lastVal!=null){
       abs = lastVal - firstVal;
-      pct = (firstVal!==0) ? ((lastVal - firstVal) / Math.abs(firstVal)) * 100 : null;
+      pct = firstVal!==0 ? ((lastVal-firstVal)/Math.abs(firstVal))*100 : null;
     }
-    const absTxt = (abs==null) ? '-' : fmt(abs) + ' ' + metric;
-    const pctTxt = (pct==null) ? '-' : (pct>=0? '<span class="green">+'+fmt(pct)+'%</span>' : '<span class="red">'+fmt(pct)+'%</span>');
 
-    const el=document.createElement('div'); el.className='box';
-    el.innerHTML = `<div class='smalltext'>${name}</div>
-      <div><strong>Lähtö (${metric})</strong>: ${firstVal!=null?fmt(firstVal):'-'}<br>
-           <strong>Uusin (${metric})</strong>: ${lastVal!=null?fmt(lastVal):'-'}<br>
-           <strong>Muutos</strong>: ${absTxt} (${pctTxt})</div>`;
+    const absTxt = abs==null? '-' : fmt(abs)+' '+metric;
+    const pctTxt = pct==null? '-' : (pct>=0? `<span class='green'>+${fmt(pct)}%</span>` : `<span class='red'>${fmt(pct)}%</span>`);
+
+    const el=document.createElement('div');
+    el.className='box';
+    el.innerHTML=`<div class='smalltext'>${name}</div>
+    <div><strong>Lähtö (${metric})</strong>: ${firstVal!=null?fmt(firstVal):'-'}<br>
+    <strong>Uusin (${metric})</strong>: ${lastVal!=null?fmt(lastVal):'-'}<br>
+    <strong>Muutos</strong>: ${absTxt} (${pctTxt})</div>`;
     box.appendChild(el);
   });
 }
@@ -238,73 +245,69 @@ function renderSummary(){
 function currentProgram(){ return data.programs.find(x=>x.id===program.value) || data.programs[0]; }
 function toNum(v){ const n=parseFloat(v); return Number.isFinite(n)? n : null; }
 function fmt(n){ return (Math.round(n*10)/10).toString().replace('.', ','); }
-function clean(v){ return (v===undefined || v===null || v==='')? '' : v; }
+function clean(v){ return v==null? '' : v; }
 function findEntry(name, which, metric){
-  // Palauta vanhin/uusin kirjaus josta löytyy haluttu metriikka
-  const all = [];
+  const all=[];
   data.logs.forEach(l=>{
-    l.entries.forEach(e=>{ 
-      if(e.name===name && e[metric]!==undefined && e[metric]!=='' ) all.push({date:l.date, ...e}); 
+    l.entries.forEach(e=>{
+      if(e.name===name && e[metric]!=null && e[metric]!=='') all.push({...e,date:l.date});
     });
   });
-  all.sort((a,b)=> a.date.localeCompare(b.date));
+  all.sort((a,b)=>a.date.localeCompare(b.date));
   if(all.length===0) return null;
-  return (which==='first')? all[0] : all[all.length-1];
+  return which==='first'? all[0] : all[all.length-1];
 }
 
 // --- Events ---
-addProgram.onclick = ()=>{
+addProgram.onclick=()=>{
   const n=prompt('Ohjelman nimi'); if(!n) return;
-  data.programs.push({id:id(), name:n, exercises:[]});
+  data.programs.push({id:id(),name:n,exercises:[]});
   saveData(); renderPrograms(); renderExerciseBadges(); renderToday(); renderHistory();
 };
-addExercise.onclick = ()=>{
+addExercise.onclick=()=>{
   const pr=currentProgram();
-  const sel=document.getElementById('presetExercises').value;
+  const sel=presetExercises.value;
   if(!sel) return;
-  if(sel==='oma'){ const n=prompt('Oma liike'); if(!n) return; pr.exercises.push(n); }
-  else { pr.exercises.push(sel); }
+  if(sel==='oma'){
+    const n=prompt('Oma liike'); if(!n) return; pr.exercises.push(n);
+  } else pr.exercises.push(sel);
   saveData(); renderExerciseBadges(); renderToday();
 };
-resetAll.onclick = ()=>{
-  if(confirm('Nollataanko KAIKKI tiedot? (ohjelmat ja historiat)')){
+resetAll.onclick=()=>{
+  if(confirm('Nollataanko kaikki tiedot?')){
     localStorage.removeItem('gymData_v6');
-    data={programs:[],logs:[],baseline:{}};
-    data.programs=[
-      {id:id(), name:'Ohjelma A', exercises:['Kävelymatto','Etureidet','Vatsalihakset','Rintalihakset']},
-      {id:id(), name:'Ohjelma B', exercises:['Kävelymatto','Takareidet','Selkälihakset','Soutu']}
-    ];
-    saveData(); renderPrograms(); renderExerciseBadges(); renderToday(); renderHistory();
-    alert('Nollattu.');
+    location.reload();
   }
 };
-program.onchange = ()=>{ renderExerciseBadges(); renderToday(); renderHistory(); };
+program.onchange=()=>{ renderExerciseBadges(); renderToday(); renderHistory(); };
 
-saveDay.onclick = ()=>{
+saveDay.onclick=()=>{
   const date=new Date().toISOString().slice(0,10);
   const entries=[];
   document.querySelectorAll('[data-ex]').forEach(inp=>{
-    const ex=inp.dataset.ex; const f=inp.dataset.field; const raw=inp.value;
+    const ex=inp.dataset.ex;
+    const f=inp.dataset.field;
+    const raw=inp.value;
     if(!entries.find(e=>e.name===ex)) entries.push({name:ex});
-    const eobj=entries.find(e=>e.name===ex); eobj[f]=raw;
+    const eobj=entries.find(e=>e.name===ex);
+    eobj[f]=raw;
 
-    // --- Lähtö tallennus: ensimmäinen ei-tyhjä arvo lukitaan baselineen ---
     const isMatto = ex.toLowerCase().includes('matto');
-    const metric = isMatto ? 'km' : 'kg';
-    const num = toNum(raw);
-    if(num!=null && (data.baseline[ex]==null || data.baseline[ex][metric]==null)){
+    const metric = isMatto?'km':'kg';
+    const num=toNum(raw);
+    if(num!=null && (!data.baseline[ex] || data.baseline[ex][metric]==null)){
       if(!data.baseline[ex]) data.baseline[ex]={};
-      data.baseline[ex].date = date;
-      data.baseline[ex][metric] = num; // lukitaan lähtöarvo
+      data.baseline[ex].date=date;
+      data.baseline[ex][metric]=num;
     }
   });
-  if(entries.length===0){ alert('Ei kirjattavaa. Lisää liikkeitä ohjelmaan.'); return; }
+  if(entries.length===0){ alert('Ei kirjattavaa.'); return; }
   data.logs.push({date, program: currentProgram().name, entries});
-  saveData(); renderHistory();
-  alert('Tallennettu.');
+  saveData(); renderHistory(); alert('Tallennettu.');
 };
 
-exportCSV.onclick = ()=>{
+// CSV
+exportCSV.onclick=()=>{
   const lines=['paiva;ohjelma;liike;kg;toistot;sarjat;km'];
   data.logs.forEach(l=>{
     l.entries.forEach(e=>{
@@ -315,34 +318,70 @@ exportCSV.onclick = ()=>{
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='kuntosali.csv'; a.click();
 };
 
-
-const toggleBtn = document.getElementById('toggleExercises');
-let hidden = true;
-
-document.getElementById('exerciseBadges').style.display = 'none';
-document.getElementById('exercisePickerRow').style.display = 'none';
-toggleBtn.textContent = 'Näytä';
-
-toggleBtn.onclick = () => {
-  hidden = !hidden;
-  document.getElementById('exerciseBadges').style.display = hidden ? 'none' : 'flex';
-  document.getElementById('exercisePickerRow').style.display = hidden ? 'none' : 'flex';
-  toggleBtn.textContent = hidden ? 'Näytä' : 'Piilota';
+// --- Vie JSON ---
+exportJSON.onclick = () => {
+  const blob = new Blob(
+    ["\uFEFF" + JSON.stringify(data, null, 2)],
+    { type: "application/json" }
+  );
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "kuntosali_backup.json";
+  a.click();
 };
 
-let historyHidden = true;
-document.getElementById('historyContainer').style.display = 'none';
-document.getElementById('toggleHistory').textContent = 'Näytä historia';
-document.getElementById('toggleHistory').onclick = () => {
-  historyHidden = !historyHidden;
-  document.getElementById('historyContainer').style.display = historyHidden ? 'none' : 'block';
-  document.getElementById('toggleHistory').textContent = historyHidden ? 'Näytä historia' : 'Piilota historia';
+// --- Tuo JSON ---
+importJSON.onclick = () => {
+  document.getElementById("jsonFileInput").click();
 };
 
-// First paint
+document.getElementById("jsonFileInput").onchange = (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const obj = JSON.parse(e.target.result);
+      if (!obj.programs || !obj.logs) {
+        alert("Virheellinen JSON!");
+        return;
+      }
+      data = obj;
+      saveData();
+      renderPrograms(); renderExerciseBadges(); renderToday(); renderHistory();
+      alert("Tietojen tuonti onnistui.");
+    } catch {
+      alert("JSON-luku epäonnistui.");
+    }
+  };
+  reader.readAsText(file);
+};
+
+// Näytä/piilota
+let hidden=true;
+exerciseBadges.style.display='none';
+exercisePickerRow.style.display='none';
+toggleExercises.textContent='Näytä';
+toggleExercises.onclick=()=>{
+  hidden=!hidden;
+  exerciseBadges.style.display=hidden?'none':'flex';
+  exercisePickerRow.style.display=hidden?'none':'flex';
+  toggleExercises.textContent=hidden?'Näytä':'Piilota';
+};
+
+let historyHidden=true;
+historyContainer.style.display='none';
+toggleHistory.textContent='Näytä historia';
+toggleHistory.onclick=()=>{
+  historyHidden=!historyHidden;
+  historyContainer.style.display=historyHidden?'none':'block';
+  toggleHistory.textContent=historyHidden?'Näytä historia':'Piilota historia';
+};
+
+// Init
 renderPrograms(); renderExerciseBadges(); renderToday(); renderHistory();
 </script>
-
 
 <script>
 if ('serviceWorker' in navigator) {
@@ -351,5 +390,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+
 </body>
 </html>
