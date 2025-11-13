@@ -2,62 +2,448 @@
 <html lang='fi'>
 <head>
 <meta charset='utf-8'>
-<title>Kuntosali v10</title>
+<title>Kuntosali</title>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <style>
-  :root{--bg:#000;--card:#0f0f0f;--ink:#ff7a00;--line:#222;--muted:#d8d8d8;}
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,system-ui,-apple-system,Segoe UI,Roboto;}
-  header{position:fixed;top:0;left:0;right:0;text-align:center;
-  background:#0b0b0b;padding:14px 0;font-size:20px;border-bottom:1px solid var(--line);z-index:10;}
-  .wrap{padding:80px 16px;max-width:860px;margin:0 auto;}
-  .card{background:var(--card);padding:16px;border-radius:16px;border:1px solid var(--line);margin-bottom:16px;}
-  .field{display:flex;flex-direction:column;margin-bottom:12px;}
-  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-  input,select{padding:8px 10px;border-radius:10px;border:1px solid #333;background:#000;color:var(--ink);font-size:15px;}
-  .small{max-width:80px;}
-  label{font-size:12px;margin-bottom:4px;color:var(--muted);}
-  .title{color:var(--ink);font-size:20px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
-  h3{margin:0 0 8px 0;color:var(--ink)}
-  button{padding:8px 12px;background:var(--ink);color:#000;border:none;border-radius:10px;font-weight:bold;cursor:pointer}
-  .btn-ghost{background:#0a0a0a;color:var(--ink);border:1px solid #333}
-  .badge{display:inline-flex;align-items:center;gap:6px;background:#1a1a1a;border:1px solid #333;border-radius:999px;padding:6px 10px;margin:4px 6px 0 0}
-  .badge button{padding:2px 8px;border-radius:8px;background:#2a2a2a;color:var(--ink);border:1px solid #444}
-  hr{border:none;border-top:1px solid var(--line);margin:10px 0}
-  table{width:100%;border-collapse:collapse;color:var(--ink);font-size:14px;}
-  th,td{padding:10px;border-bottom:1px solid #333;text-align:left}
-  th{background:#0b0b0b;position:sticky;top:0}
-  .summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
-  @media (min-width:820px){.summary{grid-template-columns:1fr 1fr 1fr}}
-  .summary .box{background:#0b0b0b;border:1px solid #222;border-radius:12px;padding:10px}
-  .smalltext{font-size:12px;color:var(--muted)}
-  .green{color:#29d67d} .red{color:#ff5c5c}
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  
+  :root{
+    --bg:#0a0a0f;
+    --card:#141419;
+    --card-hover:#1a1a22;
+    --primary:#ff6b35;
+    --primary-glow:rgba(255,107,53,0.3);
+    --secondary:#00d9ff;
+    --accent:#a855f7;
+    --success:#10b981;
+    --danger:#ef4444;
+    --text:#e5e5e5;
+    --text-muted:#888;
+    --border:#2a2a35;
+    --glow:0 0 40px rgba(255,107,53,0.4);
+  }
+  
+  *{box-sizing:border-box;margin:0;padding:0}
+  
+  body{
+    background:linear-gradient(135deg, #0a0a0f 0%, #1a0f1f 100%);
+    color:var(--text);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    min-height:100vh;
+    position:relative;
+    overflow-x:hidden;
+  }
+  
+  body::before{
+    content:'';
+    position:fixed;
+    width:600px;
+    height:600px;
+    background:radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+    top:-200px;
+    right:-200px;
+    pointer-events:none;
+    animation:float 20s infinite ease-in-out;
+  }
+  
+  body::after{
+    content:'';
+    position:fixed;
+    width:400px;
+    height:400px;
+    background:radial-gradient(circle, rgba(0,217,255,0.2) 0%, transparent 70%);
+    bottom:-100px;
+    left:-100px;
+    pointer-events:none;
+    animation:float 15s infinite ease-in-out reverse;
+  }
+  
+  @keyframes float{
+    0%,100%{transform:translate(0,0) rotate(0deg)}
+    50%{transform:translate(50px,50px) rotate(180deg)}
+  }
+  
+  header{
+    position:fixed;
+    top:0;
+    left:0;
+    right:0;
+    text-align:center;
+    background:rgba(10,10,15,0.85);
+    backdrop-filter:blur(20px);
+    padding:20px 0;
+    font-size:28px;
+    font-weight:800;
+    border-bottom:1px solid var(--border);
+    z-index:100;
+    background:linear-gradient(135deg, rgba(20,20,25,0.9) 0%, rgba(10,10,15,0.95) 100%);
+    box-shadow:0 4px 30px rgba(0,0,0,0.3);
+  }
+  
+  header::after{
+    content:'';
+    position:absolute;
+    bottom:-2px;
+    left:50%;
+    transform:translateX(-50%);
+    width:100px;
+    height:2px;
+    background:linear-gradient(90deg, transparent, var(--primary), transparent);
+  }
+  
+  .wrap{
+    padding:100px 20px 40px;
+    max-width:1200px;
+    margin:0 auto;
+    position:relative;
+    z-index:1;
+  }
+  
+  .card{
+    background:var(--card);
+    padding:28px;
+    border-radius:24px;
+    border:1px solid var(--border);
+    margin-bottom:24px;
+    position:relative;
+    overflow:hidden;
+    transition:all 0.3s ease;
+    box-shadow:0 8px 32px rgba(0,0,0,0.3);
+  }
+  
+  .card::before{
+    content:'';
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    height:3px;
+    background:linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+    opacity:0;
+    transition:opacity 0.3s ease;
+  }
+  
+  .card:hover{
+    background:var(--card-hover);
+    border-color:var(--primary);
+    transform:translateY(-2px);
+    box-shadow:0 12px 48px rgba(255,107,53,0.2);
+  }
+  
+  .card:hover::before{
+    opacity:1;
+  }
+  
+  .field{
+    display:flex;
+    flex-direction:column;
+    margin-bottom:16px;
+  }
+  
+  .row{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  
+  input,select{
+    padding:12px 16px;
+    border-radius:14px;
+    border:2px solid var(--border);
+    background:rgba(0,0,0,0.4);
+    color:var(--text);
+    font-size:15px;
+    font-family:inherit;
+    transition:all 0.3s ease;
+    font-weight:500;
+  }
+  
+  input:focus,select:focus{
+    outline:none;
+    border-color:var(--primary);
+    background:rgba(0,0,0,0.6);
+    box-shadow:0 0 0 4px var(--primary-glow);
+  }
+  
+  .small{
+    max-width:90px;
+  }
+  
+  label{
+    font-size:13px;
+    margin-bottom:6px;
+    color:var(--text-muted);
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+  }
+  
+  .title{
+    color:var(--text);
+    font-size:24px;
+    font-weight:700;
+    margin-bottom:20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+  
+  h3{
+    margin:0 0 12px 0;
+    color:var(--text);
+    font-size:18px;
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  
+  h3::before{
+    content:'';
+    width:4px;
+    height:20px;
+    background:linear-gradient(180deg, var(--primary), var(--accent));
+    border-radius:2px;
+  }
+  
+  button{
+    padding:12px 24px;
+    background:linear-gradient(135deg, var(--primary), #ff8c5a);
+    color:#fff;
+    border:none;
+    border-radius:12px;
+    font-weight:700;
+    cursor:pointer;
+    font-size:14px;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    transition:all 0.3s ease;
+    box-shadow:0 4px 15px rgba(255,107,53,0.3);
+    position:relative;
+    overflow:hidden;
+  }
+  
+  button::before{
+    content:'';
+    position:absolute;
+    top:50%;
+    left:50%;
+    width:0;
+    height:0;
+    border-radius:50%;
+    background:rgba(255,255,255,0.3);
+    transform:translate(-50%,-50%);
+    transition:width 0.6s, height 0.6s;
+  }
+  
+  button:hover::before{
+    width:300px;
+    height:300px;
+  }
+  
+  button:hover{
+    transform:translateY(-2px);
+    box-shadow:0 6px 25px rgba(255,107,53,0.5);
+  }
+  
+  button:active{
+    transform:translateY(0);
+  }
+  
+  .btn-ghost{
+    background:transparent;
+    color:var(--text);
+    border:2px solid var(--border);
+    box-shadow:none;
+  }
+  
+  .btn-ghost:hover{
+    border-color:var(--primary);
+    background:rgba(255,107,53,0.1);
+    box-shadow:0 4px 15px rgba(255,107,53,0.2);
+  }
+  
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    background:linear-gradient(135deg, rgba(255,107,53,0.15), rgba(168,85,247,0.15));
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:10px 18px;
+    margin:4px 6px 4px 0;
+    transition:all 0.3s ease;
+    backdrop-filter:blur(10px);
+  }
+  
+  .badge:hover{
+    transform:translateY(-2px);
+    border-color:var(--primary);
+    box-shadow:0 4px 15px var(--primary-glow);
+  }
+  
+  .badge span{
+    font-weight:600;
+    font-size:14px;
+  }
+  
+  .badge button{
+    padding:4px 10px;
+    border-radius:8px;
+    background:rgba(239,68,68,0.2);
+    color:var(--danger);
+    border:1px solid var(--danger);
+    font-size:16px;
+    box-shadow:none;
+  }
+  
+  .badge button:hover{
+    background:var(--danger);
+    color:#fff;
+  }
+  
+  hr{
+    border:none;
+    border-top:1px solid var(--border);
+    margin:16px 0;
+    opacity:0.5;
+  }
+  
+  table{
+    width:100%;
+    border-collapse:collapse;
+    color:var(--text);
+    font-size:14px;
+    margin-top:20px;
+  }
+  
+  th,td{
+    padding:14px;
+    border-bottom:1px solid var(--border);
+    text-align:left;
+  }
+  
+  th{
+    background:rgba(0,0,0,0.4);
+    position:sticky;
+    top:0;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    font-size:12px;
+    color:var(--primary);
+  }
+  
+  tr{
+    transition:all 0.2s ease;
+  }
+  
+  tr:hover{
+    background:rgba(255,107,53,0.05);
+  }
+  
+  .summary{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:16px;
+    margin-top:16px;
+  }
+  
+  .summary .box{
+    background:linear-gradient(135deg, rgba(255,107,53,0.08), rgba(168,85,247,0.08));
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:20px;
+    transition:all 0.3s ease;
+    position:relative;
+    overflow:hidden;
+  }
+  
+  .summary .box::before{
+    content:'';
+    position:absolute;
+    top:-50%;
+    right:-50%;
+    width:100%;
+    height:100%;
+    background:radial-gradient(circle, rgba(255,107,53,0.1), transparent);
+    opacity:0;
+    transition:opacity 0.3s ease;
+  }
+  
+  .summary .box:hover{
+    transform:translateY(-4px);
+    border-color:var(--primary);
+    box-shadow:0 8px 30px var(--primary-glow);
+  }
+  
+  .summary .box:hover::before{
+    opacity:1;
+  }
+  
+  .smalltext{
+    font-size:13px;
+    color:var(--text-muted);
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    margin-bottom:12px;
+  }
+  
+  .green{
+    color:var(--success);
+    font-weight:700;
+  }
+  
+  .red{
+    color:var(--danger);
+    font-weight:700;
+  }
+  
+  @media (max-width:768px){
+    .wrap{padding:90px 16px 30px}
+    .title{font-size:20px}
+    header{font-size:24px}
+    .card{padding:20px}
+  }
+  
+  @keyframes pulse{
+    0%,100%{opacity:1}
+    50%{opacity:0.5}
+  }
+  
+  .loading{
+    animation:pulse 1.5s infinite;
+  }
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#0a0a0f">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 </head>
 
 <body>
-<header>Kuntosali</header>
+<header>💪 Kuntosali</header>
 
 <div class='wrap'>
 
-  <!-- Ohjelma -->
   <div class='card'>
-    <div class='title'>Ohjelma</div>
+    <div class='title'>🎯 Ohjelma</div>
     <div class='row'>
       <select id='program' style='min-width:240px'></select>
-      <button id='addProgram'>+ lisää ohjelma</button>
-      <button id='resetAll' class='btn-ghost'>Nollaa kaikki</button>
+      <button id='addProgram'>+ Lisää ohjelma</button>
+      <button id='resetAll' class='btn-ghost'>🔄 Nollaa kaikki</button>
     </div>
   </div>
 
-  <!-- Liikelista -->
   <div class='card'>
     <div class='title'>
-      <span>Ohjelman liikkeet</span>
+      <span>🏋️ Ohjelman liikkeet</span>
       <button id='toggleExercises' class='btn-ghost'>Piilota</button>
     </div>
 
@@ -67,24 +453,24 @@
     <div class='row' id="exercisePickerRow">
       <select id='presetExercises' style='min-width:220px'>
         <option value=''>Valitse liike…</option>
-        <optgroup label="Aerobinen">
+        <optgroup label="🏃 Aerobinen">
           <option>Kävelymatto</option>
         </optgroup>
-        <optgroup label="Keskivartalo">
+        <optgroup label="💪 Keskivartalo">
           <option>Vatsalihakset</option>
           <option>Selkälihakset</option>
         </optgroup>
-        <optgroup label="Jalat">
+        <optgroup label="🦵 Jalat">
           <option>Etureidet</option>
           <option>Takareidet</option>
           <option>Pohkeet</option>
           <option>Jalkaprässi</option>
         </optgroup>
-        <optgroup label="Lantio">
+        <optgroup label="🎯 Lantio">
           <option>Lonkan ulkokierto</option>
           <option>Lonkan sisäkierto</option>
         </optgroup>
-        <optgroup label="Yläkroppa">
+        <optgroup label="💪 Yläkroppa">
           <option>Rintalihakset</option>
           <option>Soutu</option>
           <option>Leuanveto/ylätalja</option>
@@ -94,24 +480,22 @@
         </optgroup>
         <option value='oma'>+ Oma liike…</option>
       </select>
-      <button id='addExercise'>+ lisää liike</button>
+      <button id='addExercise'>+ Lisää liike</button>
     </div>
     
   </div>
 
-  <!-- Päivän treeni -->
   <div class='card'>
-    <div class='title'>Tämän päivän treeni</div>
+    <div class='title'>📅 Tämän päivän treeni</div>
     <div id='todayEntries'></div>
     <div class='row'>
-      <button id='saveDay'>Tallenna</button>
+      <button id='saveDay'>💾 Tallenna</button>
     </div>
   </div>
 
-  <!-- Historia ja CSV -->
   <div class='card'>
     <div class='title'>
-      <span>Vertailu</span>
+      <span>📊 Vertailu</span>
       <button id="toggleHistory" class="btn-ghost">Piilota historia</button>
     </div>
 
@@ -126,9 +510,9 @@
       </table>
     </div>
 
-    <button id='exportCSV'>Vie CSV</button>
-    <button id='exportJSON'>Vie JSON</button>
-    <button id='importJSON'>Tuo JSON</button>
+    <button id='exportCSV'>📥 Vie CSV</button>
+    <button id='exportJSON'>📥 Vie JSON</button>
+    <button id='importJSON'>📤 Tuo JSON</button>
     <input type="file" id="jsonFileInput" accept="application/json" style="display:none">
 
   </div>
@@ -136,7 +520,6 @@
 </div>
 
 <script>
-// --- Data ---
 let data = JSON.parse(localStorage.getItem('gymData_v6')||'{}');
 if(!data.programs){
   data = {
@@ -152,7 +535,6 @@ if(!data.programs){
 function saveData(){ localStorage.setItem('gymData_v6', JSON.stringify(data)); }
 function id(){ return Math.random().toString(36).slice(2,9); }
 
-// --- Renderers ---
 function renderPrograms(){
   const s=document.getElementById('program');
   s.innerHTML='';
@@ -161,6 +543,7 @@ function renderPrograms(){
   });
   if(!s.value && data.programs[0]) s.value=data.programs[0].id;
 }
+
 function renderExerciseBadges(){
   const pr=currentProgram(); const box=document.getElementById('exerciseBadges'); box.innerHTML='';
   pr.exercises.forEach((name, idx)=>{
@@ -174,6 +557,7 @@ function renderExerciseBadges(){
     box.appendChild(b);
   });
 }
+
 function renderToday(){
   const pr=currentProgram(); const box=document.getElementById('todayEntries'); box.innerHTML='';
   pr.exercises.forEach(ex=>{
@@ -195,6 +579,7 @@ function renderToday(){
     box.appendChild(card);
   });
 }
+
 function renderHistory(){
   const tb=document.getElementById('historyBody'); tb.innerHTML='';
   data.logs.forEach(l=>{
@@ -206,6 +591,7 @@ function renderHistory(){
   });
   renderSummary();
 }
+
 function renderSummary(){
   const pr=currentProgram(); const box=document.getElementById('summaryBoxes'); box.innerHTML='';
   pr.exercises.forEach(name=>{
@@ -229,19 +615,18 @@ function renderSummary(){
     }
 
     const absTxt = abs==null? '-' : fmt(abs)+' '+metric;
-    const pctTxt = pct==null? '-' : (pct>=0? `<span class='green'>+${fmt(pct)}%</span>` : `<span class='red'>${fmt(pct)}%</span>`);
+    const pctTxt = pct==null? '-' : (pct>=0? `<span class='green'>▲ ${fmt(pct)}%</span>` : `<span class='red'>▼ ${fmt(pct)}%</span>`);
 
     const el=document.createElement('div');
     el.className='box';
     el.innerHTML=`<div class='smalltext'>${name}</div>
     <div><strong>Lähtö (${metric})</strong>: ${firstVal!=null?fmt(firstVal):'-'}<br>
     <strong>Uusin (${metric})</strong>: ${lastVal!=null?fmt(lastVal):'-'}<br>
-    <strong>Muutos</strong>: ${absTxt} (${pctTxt})</div>`;
+    <strong>Muutos</strong>: ${absTxt} ${pctTxt}</div>`;
     box.appendChild(el);
   });
 }
 
-// --- Helpers ---
 function currentProgram(){ return data.programs.find(x=>x.id===program.value) || data.programs[0]; }
 function toNum(v){ const n=parseFloat(v); return Number.isFinite(n)? n : null; }
 function fmt(n){ return (Math.round(n*10)/10).toString().replace('.', ','); }
@@ -258,12 +643,12 @@ function findEntry(name, which, metric){
   return which==='first'? all[0] : all[all.length-1];
 }
 
-// --- Events ---
 addProgram.onclick=()=>{
   const n=prompt('Ohjelman nimi'); if(!n) return;
   data.programs.push({id:id(),name:n,exercises:[]});
   saveData(); renderPrograms(); renderExerciseBadges(); renderToday(); renderHistory();
 };
+
 addExercise.onclick=()=>{
   const pr=currentProgram();
   const sel=presetExercises.value;
@@ -273,12 +658,14 @@ addExercise.onclick=()=>{
   } else pr.exercises.push(sel);
   saveData(); renderExerciseBadges(); renderToday();
 };
+
 resetAll.onclick=()=>{
   if(confirm('Nollataanko kaikki tiedot?')){
     localStorage.removeItem('gymData_v6');
     location.reload();
   }
 };
+
 program.onchange=()=>{ renderExerciseBadges(); renderToday(); renderHistory(); };
 
 saveDay.onclick=()=>{
@@ -303,10 +690,9 @@ saveDay.onclick=()=>{
   });
   if(entries.length===0){ alert('Ei kirjattavaa.'); return; }
   data.logs.push({date, program: currentProgram().name, entries});
-  saveData(); renderHistory(); alert('Tallennettu.');
+  saveData(); renderHistory(); alert('Tallennettu! 💪');
 };
 
-// CSV
 exportCSV.onclick=()=>{
   const lines=['paiva;ohjelma;liike;kg;toistot;sarjat;km'];
   data.logs.forEach(l=>{
@@ -318,19 +704,17 @@ exportCSV.onclick=()=>{
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='kuntosali.csv'; a.click();
 };
 
-// --- Vie JSON ---
 exportJSON.onclick = () => {
   const blob = new Blob(
     ["\uFEFF" + JSON.stringify(data, null, 2)],
     { type: "application/json" }
   );
-  const a = document.createElement("a");
+  const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = "kuntosali_backup.json";
+  a.download = 'kuntosali_backup.json';
   a.click();
 };
 
-// --- Tuo JSON ---
 importJSON.onclick = () => {
   document.getElementById("jsonFileInput").click();
 };
@@ -350,7 +734,7 @@ document.getElementById("jsonFileInput").onchange = (event) => {
       data = obj;
       saveData();
       renderPrograms(); renderExerciseBadges(); renderToday(); renderHistory();
-      alert("Tietojen tuonti onnistui.");
+      alert("Tietojen tuonti onnistui! ✅");
     } catch {
       alert("JSON-luku epäonnistui.");
     }
@@ -358,7 +742,6 @@ document.getElementById("jsonFileInput").onchange = (event) => {
   reader.readAsText(file);
 };
 
-// Näytä/piilota
 let hidden=true;
 exerciseBadges.style.display='none';
 exercisePickerRow.style.display='none';
@@ -379,7 +762,6 @@ toggleHistory.onclick=()=>{
   toggleHistory.textContent=historyHidden?'Näytä historia':'Piilota historia';
 };
 
-// Init
 renderPrograms(); renderExerciseBadges(); renderToday(); renderHistory();
 </script>
 
