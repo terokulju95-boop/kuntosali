@@ -321,7 +321,9 @@ function renderExerciseBadges(){
   const pr=currentProgram(); const box=document.getElementById('exerciseBadges'); box.innerHTML='';
   pr.exercises.forEach((name, idx)=>{
     const b=document.createElement('div'); b.className='badge';
-    b.innerHTML = `<span>${name}</span> <button title="Poista">×</button>`;
+    const nameSpan=document.createElement('span'); nameSpan.textContent=name;
+    const removeBtn=document.createElement('button'); removeBtn.title='Poista'; removeBtn.textContent='×';
+    b.appendChild(nameSpan); b.appendChild(removeBtn);
     b.querySelector('button').onclick = ()=>{
       if(confirm('Poistetaanko liike ohjelmasta?')){
         pr.exercises.splice(idx,1); saveData(); renderExerciseBadges(); renderToday();
@@ -335,18 +337,22 @@ function renderToday(){
   pr.exercises.forEach(ex=>{
     const card=document.createElement('div'); card.className='card';
     if(ex.toLowerCase().includes('matto')){
-      card.innerHTML = `<h3>${ex}</h3>
-        <div class='row'>
-          <div class='field'><label>Kilometrit (km)</label>
-          <input class='small' data-ex='${ex}' data-field='km' type='number' step='0.01'></div>
-        </div>`;
+      const h3=document.createElement('h3'); h3.textContent=ex; card.appendChild(h3);
+      const rowDiv=document.createElement('div'); rowDiv.className='row';
+      const fieldDiv=document.createElement('div'); fieldDiv.className='field';
+      const lbl=document.createElement('label'); lbl.textContent='Kilometrit (km)';
+      const inp=document.createElement('input'); inp.className='small'; inp.dataset.ex=ex; inp.dataset.field='km'; inp.type='number'; inp.step='0.01';
+      fieldDiv.appendChild(lbl); fieldDiv.appendChild(inp); rowDiv.appendChild(fieldDiv); card.appendChild(rowDiv);
     } else {
-      card.innerHTML = `<h3>${ex}</h3>
-        <div class='row'>
-          <div class='field'><label>Kg</label><input class='small' data-ex='${ex}' data-field='kg' type='number' step='0.1'></div>
-          <div class='field'><label>Toistot</label><input class='small' data-ex='${ex}' data-field='reps' type='number'></div>
-          <div class='field'><label>Sarjat</label><input class='small' data-ex='${ex}' data-field='sets' type='number'></div>
-        </div>`;
+      const h3=document.createElement('h3'); h3.textContent=ex; card.appendChild(h3);
+      const rowDiv=document.createElement('div'); rowDiv.className='row';
+      [['Kg','kg','0.1'],['Toistot','reps','1'],['Sarjat','sets','1']].forEach(([labelTxt,field,step])=>{
+        const fieldDiv=document.createElement('div'); fieldDiv.className='field';
+        const lbl=document.createElement('label'); lbl.textContent=labelTxt;
+        const inp=document.createElement('input'); inp.className='small'; inp.dataset.ex=ex; inp.dataset.field=field; inp.type='number'; inp.step=step;
+        fieldDiv.appendChild(lbl); fieldDiv.appendChild(inp); rowDiv.appendChild(fieldDiv);
+      });
+      card.appendChild(rowDiv);
     }
     box.appendChild(card);
   });
@@ -356,7 +362,9 @@ function renderHistory(){
   data.logs.forEach(l=>{
     l.entries.forEach(e=>{
       const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${l.date}</td><td>${e.name}</td><td>${clean(e.kg)}</td><td>${clean(e.reps)}</td><td>${clean(e.sets)}</td><td>${clean(e.km)}</td>`;
+      [l.date, e.name, clean(e.kg), clean(e.reps), clean(e.sets), clean(e.km)].forEach(val=>{
+        const td=document.createElement('td'); td.textContent=val; tr.appendChild(td);
+      });
       tb.appendChild(tr);
     });
   });
@@ -389,10 +397,34 @@ function renderSummary(){
 
     const el=document.createElement('div');
     el.className='box';
-    el.innerHTML=`<div class='smalltext'>${name}</div>
-    <div><strong>Lähtö (${metric})</strong>: ${firstVal!=null?fmt(firstVal):'-'}<br>
-    <strong>Uusin (${metric})</strong>: ${lastVal!=null?fmt(lastVal):'-'}<br>
-    <strong>Muutos</strong>: ${absTxt} (${pctTxt})</div>`;
+
+    const nameDiv=document.createElement('div'); nameDiv.className='smalltext'; nameDiv.textContent=name;
+
+    const detailDiv=document.createElement('div');
+    const b1=document.createElement('strong'); b1.textContent=`Lähtö (${metric})`;
+    const b2=document.createElement('strong'); b2.textContent=`Uusin (${metric})`;
+    const b3=document.createElement('strong'); b3.textContent='Muutos';
+
+    detailDiv.appendChild(b1);
+    detailDiv.appendChild(document.createTextNode(': ' + (firstVal!=null?fmt(firstVal):'-')));
+    detailDiv.appendChild(document.createElement('br'));
+    detailDiv.appendChild(b2);
+    detailDiv.appendChild(document.createTextNode(': ' + (lastVal!=null?fmt(lastVal):'-')));
+    detailDiv.appendChild(document.createElement('br'));
+    detailDiv.appendChild(b3);
+    detailDiv.appendChild(document.createTextNode(': ' + absTxt + ' ('));
+    if(pct==null){
+      detailDiv.appendChild(document.createTextNode('-'));
+    } else {
+      const pctSpan=document.createElement('span');
+      pctSpan.className=pct>=0?'green':'red';
+      pctSpan.textContent=(pct>=0?'+':'')+fmt(pct)+'%';
+      detailDiv.appendChild(pctSpan);
+    }
+    detailDiv.appendChild(document.createTextNode(')'));
+
+    el.appendChild(nameDiv);
+    el.appendChild(detailDiv);
     box.appendChild(el);
   });
 }
